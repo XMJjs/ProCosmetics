@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 public class EntityTrackerImpl extends AbstractRunnable implements EntityTracker {
 
     private static final ProCosmeticsPlugin PLUGIN = ProCosmeticsPlugin.getPlugin();
-    private static final long DEFAULT_UPDATE_INTERVAL = 20L;
+    private static final long DEFAULT_UPDATE_INTERVAL = 10L;
     private static final long DEFAULT_START_DELAY = 1L;
 
     private double trackingRange;
