@@ -160,6 +160,16 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Nullable
+    public User getConnecting(@Nullable UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        connecting.cleanUp();
+        return connecting.getIfPresent(uuid);
+    }
+
+    @Override
+    @Nullable
     public User getConnected(@Nullable UUID uuid) {
         if (uuid == null) {
             return null;
