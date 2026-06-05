@@ -46,6 +46,7 @@ import se.filledev.procosmetics.api.treasure.loot.LootTable;
 import se.filledev.procosmetics.api.user.User;
 import se.filledev.procosmetics.api.util.structure.StructureData;
 import se.filledev.procosmetics.api.util.structure.type.BlockStructure;
+import se.filledev.procosmetics.util.FastMathUtil;
 import se.filledev.procosmetics.util.LocationUtil;
 import se.filledev.procosmetics.util.MathUtil;
 import se.filledev.procosmetics.util.MetadataUtil;
@@ -280,7 +281,7 @@ public abstract class TreasureChestAnimationImpl extends BukkitRunnable implemen
             Matrix4f transformationMatrix = new Matrix4f();
             transformationMatrix.identity()
                     //.scale(scale)
-                    //.rotateY(radians)
+                    .rotateY(FastMathUtil.PI)
                     .translate(-0.5f, 0.0f, -0.5f);
             blockDisplay.setTransformationMatrix(transformationMatrix);
         }
