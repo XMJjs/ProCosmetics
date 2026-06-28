@@ -10,11 +10,12 @@ repositories {
 
 dependencies {
     // Spigot API
-    compileOnly("org.spigotmc:spigot:26.1.2-R0.1-SNAPSHOT") // Includes libs
-    compileOnly("org.spigotmc:spigot-api:26.1.2-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot:26.2-R0.1-SNAPSHOT") // Includes libs
+    compileOnly("org.spigotmc:spigot-api:26.2-R0.1-SNAPSHOT")
 
     // Project dependencies
     implementation(project(":api"))
+    implementation(project(":paper"))
     compileOnly("org.jetbrains:annotations:26.1.0")
 
     // Runtime libraries (will be shaded)
@@ -28,7 +29,10 @@ dependencies {
 
     implementation("net.kyori:adventure-api:5.1.1")
     implementation("net.kyori:adventure-text-minimessage:5.1.1")
-    implementation("net.kyori:adventure-platform-bukkit:4.4.1")
+    implementation("net.kyori:adventure-text-serializer-json:5.1.1")
+    implementation("net.kyori:adventure-text-serializer-gson:5.1.1")
+    implementation("net.kyori:adventure-text-serializer-legacy:5.1.1")
+    implementation("net.kyori:adventure-text-serializer-plain:5.1.1")
 
     // Plugin hooks
     compileOnly("me.clip:placeholderapi:2.12.2")
@@ -37,8 +41,12 @@ dependencies {
     {
         exclude(group = "io.papermc.paper")
     }
-    compileOnly("com.github.Zrips:CMI-API:9.8.6.4")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.17-SNAPSHOT")
+    {
+        exclude(group = "com.google.guava")
+        exclude(group = "com.google.code.gson")
+    }
+    compileOnly("com.github.Zrips:CMI-API:9.8.6.4")
     compileOnly("org.black_ixx:playerpoints:3.3.3")
     compileOnly("com.github.LeonMangler:SuperVanish:6.2.19")
 }

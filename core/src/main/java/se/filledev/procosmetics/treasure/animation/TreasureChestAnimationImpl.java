@@ -18,7 +18,6 @@
 package se.filledev.procosmetics.treasure.animation;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.*;
@@ -58,7 +57,6 @@ import java.util.logging.Level;
 
 public abstract class TreasureChestAnimationImpl extends BukkitRunnable implements TreasureChestAnimation, Listener {
 
-    private static final LegacyComponentSerializer SERIALIZER = LegacyComponentSerializer.legacySection();
     private static final Title.Times DEFAULT_TIMES = Title.Times.times(Ticks.duration(5), Ticks.duration(50), Ticks.duration(5));
     public static final int MAX_TIME_BEFORE_FORCE_OPEN = 1000;
 
@@ -208,12 +206,12 @@ public abstract class TreasureChestAnimationImpl extends BukkitRunnable implemen
         NMSEntity text = plugin.getNMSManager().createEntity(location.getWorld(), EntityType.TEXT_DISPLAY);
 
         if (text.getBukkitEntity() instanceof TextDisplay textDisplay) {
-            textDisplay.setText(SERIALIZER.serialize(user.translate(
+            plugin.getPlatformAdapter().setText(textDisplay, user.translate(
                     "treasure_chest.open.hologram",
                     Placeholder.unparsed("category", generatedLoot.getCategory().getName(user)),
                     Placeholder.component("loot", generatedLoot.getResolvedName(user)),
                     rarity.getResolvers(user)
-            )));
+            ));
             textDisplay.setBillboard(TextDisplay.Billboard.CENTER);
             textDisplay.setTeleportDuration(2);
         }

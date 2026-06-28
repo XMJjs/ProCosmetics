@@ -185,10 +185,7 @@ public class MusicImpl extends CosmeticImpl<MusicType, MusicBehavior> implements
                     Placeholder.unparsed("song", cosmeticType.getName(user)));
         }
         displayingSong = !displayingSong;
-
-        if (!component.equals(Component.empty())) {
-            armorStand.setCustomName(component);
-        }
+        armorStand.setCustomName(component);
     }
 
     @Override

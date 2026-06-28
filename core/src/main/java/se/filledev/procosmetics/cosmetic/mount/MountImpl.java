@@ -18,7 +18,6 @@
 package se.filledev.procosmetics.cosmetic.mount;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -43,8 +42,6 @@ import se.filledev.procosmetics.cosmetic.CosmeticImpl;
 import se.filledev.procosmetics.util.MetadataUtil;
 
 public class MountImpl extends CosmeticImpl<MountType, MountBehavior> implements Mount {
-
-    private static final LegacyComponentSerializer SERIALIZER = LegacyComponentSerializer.legacySection();
 
     private final boolean rideOnSpawn;
     private final boolean despawnOnDismount;
@@ -159,13 +156,13 @@ public class MountImpl extends CosmeticImpl<MountType, MountBehavior> implements
     public void spawn(Location location) {
         if (entity != null) {
             entity.remove();
+            onUnequip();
         }
         entity = location.getWorld().spawn(location, cosmeticType.getEntityType().getEntityClass(), entity -> {
-            entity.setCustomName(SERIALIZER.serialize(user.translate(
+            plugin.getPlatformAdapter().setCustomName(entity, user.translate(
                     "cosmetic.mounts.name_tag",
                     Placeholder.unparsed("player", player.getName()),
-                    Placeholder.unparsed("cosmetic", cosmeticType.getName(user))))
-            );
+                    Placeholder.unparsed("cosmetic", cosmeticType.getName(user))));
 
             if (entity instanceof LivingEntity livingEntity) {
                 AttributeInstance attribute = livingEntity.getAttribute(Attribute.MAX_HEALTH);

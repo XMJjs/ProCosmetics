@@ -25,7 +25,6 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import se.filledev.procosmetics.ProCosmeticsPlugin;
 import se.filledev.procosmetics.api.ProCosmetics;
 import se.filledev.procosmetics.api.cosmetic.Cosmetic;
 import se.filledev.procosmetics.api.cosmetic.gadget.GadgetType;
@@ -74,7 +73,7 @@ public class UserImpl implements User {
     }
 
     private Audience getAudience() {
-        return ((ProCosmeticsPlugin) plugin).adventure().player(uuid);
+        return plugin.getPlatformAdapter().audience(getPlayer());
     }
 
     @Override

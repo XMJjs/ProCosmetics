@@ -25,12 +25,11 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.jetbrains.annotations.Nullable;
 import se.filledev.procosmetics.ProCosmeticsPlugin;
 import se.filledev.procosmetics.api.nms.EntityTracker;
 import se.filledev.procosmetics.api.nms.NMSEntity;
 import se.filledev.procosmetics.nms.entitytype.CachedEntityType;
-
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 

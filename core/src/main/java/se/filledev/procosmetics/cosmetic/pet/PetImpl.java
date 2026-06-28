@@ -19,7 +19,6 @@ package se.filledev.procosmetics.cosmetic.pet;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
@@ -42,8 +41,6 @@ import se.filledev.procosmetics.util.MathUtil;
 import se.filledev.procosmetics.util.MetadataUtil;
 
 public class PetImpl extends CosmeticImpl<PetType, PetBehavior> implements Pet {
-
-    private static final LegacyComponentSerializer SERIALIZER = LegacyComponentSerializer.legacySection();
 
     protected NMSEntity nmsEntity;
     protected Entity entity;
@@ -93,7 +90,7 @@ public class PetImpl extends CosmeticImpl<PetType, PetBehavior> implements Pet {
                     Placeholder.unparsed("player", player.getName()),
                     Placeholder.unparsed("cosmetic", cosmeticType.getName(user))
             );
-            entity.setCustomName(SERIALIZER.serialize(nameTag));
+            plugin.getPlatformAdapter().setCustomName(entity, nameTag);
             entity.setCustomNameVisible(!nameTag.equals(Component.empty()));
             entity.setSilent(true);
 

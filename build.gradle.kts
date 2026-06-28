@@ -102,7 +102,7 @@ subprojects {
             target("src/**/*.java")
             trimTrailingWhitespace()
             endWithNewline()
-            removeUnusedImports()
+            //removeUnusedImports()
             //palantirJavaFormat("2.81.0").style("GOOGLE").formatJavadoc(true)
             licenseHeaderFile(rootProject.file("/config/spotless/license-header.txt"), "package ")
                 .updateYearWithLatest(true)
