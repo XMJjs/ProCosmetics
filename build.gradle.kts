@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "se.filledev"
-version = "2.0.4"
+version = "2.0.5"
 
 java {
     toolchain {
