@@ -320,13 +320,6 @@ public class ProCosmeticsPlugin extends JavaPlugin implements ProCosmetics {
         return plugin;
     }
 
-    //public BukkitAudiences adventure() {
-    // if (adventure == null) {
-    //   throw new IllegalStateException("Tried to access Adventure when the plugin was disabled!");
-    //}
-    //return adventure;
-    //}
-
     @Override
     public JavaPlugin getJavaPlugin() {
         return this;
