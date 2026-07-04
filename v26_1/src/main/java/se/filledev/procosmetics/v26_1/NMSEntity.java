@@ -524,13 +524,9 @@ public class NMSEntity extends NMSEntityImpl<Packet<? super ClientGamePacketList
 
     @Override
     public void removePathfinder() {
-        try {
-            Mob entityInsentient = (Mob) entity;
-
-            entityInsentient.goalSelector.getAvailableGoals().clear();
-            entityInsentient.targetSelector.getAvailableGoals().clear();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (entity instanceof Mob mob) {
+            mob.goalSelector.getAvailableGoals().clear();
+            mob.targetSelector.getAvailableGoals().clear();
         }
     }
 
