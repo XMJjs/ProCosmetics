@@ -22,12 +22,13 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import se.filledev.procosmetics.api.cosmetic.CosmeticContext;
 import se.filledev.procosmetics.api.cosmetic.gadget.GadgetBehavior;
 import se.filledev.procosmetics.api.cosmetic.gadget.GadgetType;
@@ -56,11 +57,16 @@ public class DiscoBall implements GadgetBehavior {
     public InteractionResult onInteract(CosmeticContext<GadgetType> context, Action action, @Nullable Block clickedBlock, @Nullable Vector clickedPosition) {
         Player player = context.getPlayer();
         location = player.getLocation();
+        location.setPitch(0.0f);
 
-        nmsEntity = context.getPlugin().getNMSManager().createEntity(player.getWorld(), EntityType.ARMOR_STAND);
-        if (nmsEntity.getBukkitEntity() instanceof ArmorStand armorStand) {
-            armorStand.setInvisible(true);
-            armorStand.setArms(false);
+        nmsEntity = context.getPlugin().getNMSManager().createEntity(player.getWorld(), EntityType.ITEM_DISPLAY);
+
+        if (nmsEntity.getBukkitEntity() instanceof ItemDisplay itemDisplay) {
+            itemDisplay.setItemStack(Materials.getRandomStainedGlassItem());
+            itemDisplay.setTeleportDuration(1);
+            Matrix4f matrix = new Matrix4f();
+            matrix.scale(0.5f);
+            itemDisplay.setTransformationMatrix(matrix);
         }
         nmsEntity.setPositionRotation(location.add(0.0d, HEIGHT_OFFSET, 0.0d));
         nmsEntity.getTracker().startTracking();
@@ -77,15 +83,15 @@ public class DiscoBall implements GadgetBehavior {
         if (nmsEntity == null) {
             return;
         }
-        nmsEntity.setHeadPose(0.0f, ROTATION_PER_TICK * tick, 0.0f);
-        nmsEntity.sendEntityMetadataPacket();
+        location.setYaw(ROTATION_PER_TICK * tick);
+        nmsEntity.sendPositionRotationPacket(location);
 
         if (tick % 4 == 0) {
-            nmsEntity.setHelmet(Materials.getRandomStainedGlassItem());
-            nmsEntity.sendEntityEquipmentPacket();
+            if (nmsEntity.getBukkitEntity() instanceof ItemDisplay itemDisplay) {
+                itemDisplay.setItemStack(Materials.getRandomStainedGlassItem());
+            }
+            nmsEntity.sendEntityMetadataPacket();
         }
-        nmsEntity.getPreviousLocation(location).add(0.0d, 1.6d, 0.0d);
-
         Location randomLocation = location.clone().add(
                 MathUtil.randomRange(-RANGE, RANGE),
                 MathUtil.randomRange(-RANGE, RANGE),
