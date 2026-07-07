@@ -70,7 +70,13 @@ public class PetImpl extends CosmeticImpl<PetType, PetBehavior> implements Pet {
 
     @Override
     protected void onUnequip() {
-        despawn();
+        if (nmsEntity != null) {
+            nmsEntity = null;
+        }
+        if (entity != null) {
+            entity.remove();
+            entity = null;
+        }
     }
 
     @Override
@@ -80,9 +86,12 @@ public class PetImpl extends CosmeticImpl<PetType, PetBehavior> implements Pet {
 
     @Override
     public void spawn(Location location) {
+        // Remove the currently spawned entity and clean up its state before spawning a new one
+        if (entity != null) {
+            behavior.onUnequip(this);
+            onUnequip();
+        }
         this.location = location.clone();
-
-        despawn();
 
         entity = location.getWorld().spawn(location, cosmeticType.getEntityType().getEntityClass(), entity -> {
             Component nameTag = user.translate(
@@ -127,16 +136,6 @@ public class PetImpl extends CosmeticImpl<PetType, PetBehavior> implements Pet {
 
         CosmeticEntitySpawnEvent event = new CosmeticEntitySpawnEvent(plugin, user, player, entity);
         plugin.getServer().getPluginManager().callEvent(event);
-    }
-
-    private void despawn() {
-        if (nmsEntity != null) {
-            nmsEntity = null;
-        }
-        if (entity != null) {
-            entity.remove();
-            entity = null;
-        }
     }
 
     protected void dropDespawningItem(ItemStack itemStack) {

@@ -88,7 +88,6 @@ public class MountImpl extends CosmeticImpl<MountType, MountBehavior> implements
         }
 
         if (entity != null) {
-            entity.eject();
             entity.remove();
             entity = null;
         }
@@ -154,8 +153,9 @@ public class MountImpl extends CosmeticImpl<MountType, MountBehavior> implements
 
     @Override
     public void spawn(Location location) {
+        // Remove the currently spawned entity and clean up its state before spawning a new one
         if (entity != null) {
-            entity.remove();
+            behavior.onUnequip(this);
             onUnequip();
         }
         entity = location.getWorld().spawn(location, cosmeticType.getEntityType().getEntityClass(), entity -> {
