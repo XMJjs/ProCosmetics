@@ -27,19 +27,17 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDismountEvent;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 import se.filledev.procosmetics.ProCosmeticsPlugin;
 import se.filledev.procosmetics.api.cosmetic.CosmeticContext;
 import se.filledev.procosmetics.api.cosmetic.gadget.GadgetBehavior;
 import se.filledev.procosmetics.api.cosmetic.gadget.GadgetType;
 import se.filledev.procosmetics.api.user.User;
 import se.filledev.procosmetics.util.MetadataUtil;
-
-import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -64,6 +62,8 @@ public class Cowboy implements GadgetBehavior, Listener {
         }
 
         if (clickedPlayer == null) {
+            context.getUser().sendMessage(context.getUser().translate("cosmetic.gadgets.click_player"));
+            player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 1.0f);
             return InteractionResult.fail();
         }
         Location location = clickedPlayer.getLocation().add(0.0d, 2.0d, 0.0d);
@@ -106,11 +106,6 @@ public class Cowboy implements GadgetBehavior, Listener {
     @Override
     public boolean shouldUnequipOnTeleport() {
         return false;
-    }
-
-    @EventHandler
-    public void onLeftClick22(PlayerInteractAtEntityEvent event) {
-
     }
 
     @EventHandler
