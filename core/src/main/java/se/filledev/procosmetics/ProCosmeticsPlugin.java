@@ -193,6 +193,7 @@ public class ProCosmeticsPlugin extends JavaPlugin implements ProCosmetics {
         for (TreasureChestPlatform platform : treasureChestManager.getPlatforms()) {
             platform.hideDisplay();
         }
+        fakeBlockManager.shutdown();
         HandlerList.unregisterAll(this);
         getServer().getScheduler().cancelTasks(this);
 
@@ -380,7 +381,7 @@ public class ProCosmeticsPlugin extends JavaPlugin implements ProCosmetics {
         return menuManager;
     }
 
-    public FakeBlockManager getBlockRestoreManager() {
+    public FakeBlockManager getFakeBlockManager() {
         return fakeBlockManager;
     }
 

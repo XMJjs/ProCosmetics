@@ -64,7 +64,7 @@ public abstract class BlockTrailBehavior implements MountBehavior {
                 ItemStack itemStack = MathUtil.getRandomElement(getTrailBlocks());
 
                 if (itemStack != null) {
-                    PLUGIN.getBlockRestoreManager().setFakeBlock(block, itemStack, true, 2);
+                    PLUGIN.getFakeBlockManager().setFakeBlock(block, itemStack, false, 40);
                 }
             }
         }
