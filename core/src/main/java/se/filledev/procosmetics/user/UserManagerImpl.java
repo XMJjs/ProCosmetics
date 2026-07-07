@@ -66,7 +66,7 @@ public class UserManagerImpl implements UserManager {
 
     public void registerListeners() {
         plugin.getServer().getPluginManager().registerEvents(new Listeners(), plugin);
-        plugin.getServer().getScheduler().runTaskTimer(plugin, new MovementRunnable(), 1L, 1L);
+        plugin.getServer().getScheduler().runTaskTimer(plugin, new MovementRunnable(), 1L, 2L); // Keep this at least 2 ticks
     }
 
     public void loadOnlinePlayers() {
@@ -332,7 +332,7 @@ public class UserManagerImpl implements UserManager {
 
     private final class MovementRunnable extends AbstractRunnable {
 
-        private final Location reuseableLocation = new Location(null, 0, 0, 0);
+        private final Location reuseableLocation = new Location(null, 0.0d, 0.0d, 0.0d);
 
         @Override
         public void run() {
