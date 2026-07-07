@@ -30,8 +30,8 @@ import se.filledev.procosmetics.api.locale.Language;
 import se.filledev.procosmetics.api.locale.LanguageManager;
 import se.filledev.procosmetics.api.locale.Translatable;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,7 +43,7 @@ import java.util.logging.Level;
 
 public class LanguageManagerImpl implements LanguageManager {
 
-    private static final Gson GSON = new GsonBuilder().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     private final ProCosmetics plugin;
     private final Map<String, Language> languages = new HashMap<>();
@@ -95,6 +95,7 @@ public class LanguageManagerImpl implements LanguageManager {
                         plugin.getLogger().log(Level.WARNING, "Failed to load translation file " + path.getFileName() + ". File not found.");
                         continue;
                     }
+                    json = mergeMissingTranslations(plugin, code, path, json);
 
                     for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
                         JsonElement translationElement = entry.getValue();
@@ -115,6 +116,71 @@ public class LanguageManagerImpl implements LanguageManager {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Compares the translation file on disk with the embedded default file in
+     * the plugin jar (if one exists). Any keys present in the default file but
+     * missing on disk are inserted at the position they have in the default
+     * file. Custom keys that only exist on disk are kept. The file is only
+     * rewritten if at least one key was missing.
+     *
+     * @return the merged translations, or the original object if nothing changed
+     */
+    private JsonObject mergeMissingTranslations(Plugin plugin, String code, Path path, JsonObject loaded) {
+        JsonObject defaults = readEmbeddedTranslations(plugin, code);
+
+        if (defaults == null) {
+            return loaded;
+        }
+        JsonObject merged = new JsonObject();
+        List<String> addedKeys = new ArrayList<>();
+
+        // Follow the key order of the embedded default file so missing keys
+        // end up at the correct place, while keeping the user's edited values.
+        for (Map.Entry<String, JsonElement> entry : defaults.entrySet()) {
+            String key = entry.getKey();
+
+            if (loaded.has(key)) {
+                merged.add(key, loaded.get(key));
+            } else {
+                merged.add(key, entry.getValue().deepCopy());
+                addedKeys.add(key);
+            }
+        }
+
+        // Preserve custom keys that only exist in the file on disk.
+        for (Map.Entry<String, JsonElement> entry : loaded.entrySet()) {
+            if (!merged.has(entry.getKey())) {
+                merged.add(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (addedKeys.isEmpty()) {
+            return loaded;
+        }
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+            GSON.toJson(merged, writer);
+            plugin.getLogger().log(Level.INFO, "Added " + addedKeys.size() + " missing translation(s) to " + path.getFileName() + ": " + String.join(", ", addedKeys));
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to save updated translation file " + path.getFileName() + ".", e);
+        }
+        return merged;
+    }
+
+    @Nullable
+    private JsonObject readEmbeddedTranslations(Plugin plugin, String code) {
+        try (InputStream stream = plugin.getResource("lang/" + code + ".json")) {
+            if (stream == null) {
+                return null;
+            }
+            try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+                return GSON.fromJson(reader, JsonObject.class);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to read embedded translation file for language " + code + ".", e);
+            return null;
         }
     }
 
