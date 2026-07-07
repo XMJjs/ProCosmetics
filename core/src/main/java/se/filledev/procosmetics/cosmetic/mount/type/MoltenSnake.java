@@ -81,7 +81,7 @@ public class MoltenSnake implements MountBehavior {
             }
             Location location = player.getLocation();
             nmsEntity.setYaw(location.getYaw());
-            entity.setVelocity(location.getDirection().multiply(0.7d));
+            entity.setVelocity(location.getDirection().multiply(context.getType().getMovementSpeed()));
         }
         Location location = reusableEntityLocation;
 

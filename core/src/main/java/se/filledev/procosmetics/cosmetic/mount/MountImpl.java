@@ -165,12 +165,17 @@ public class MountImpl extends CosmeticImpl<MountType, MountBehavior> implements
                     Placeholder.unparsed("cosmetic", cosmeticType.getName(user))));
 
             if (entity instanceof LivingEntity livingEntity) {
-                AttributeInstance attribute = livingEntity.getAttribute(Attribute.MAX_HEALTH);
+                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.MAX_HEALTH);
 
-                if (attribute != null) {
-                    double health = 2.0d;
-                    attribute.setBaseValue(health);
+                if (maxHealth != null) {
+                    double health = 2.0d; // One full heart
+                    maxHealth.setBaseValue(health);
                     livingEntity.setHealth(health);
+                }
+                AttributeInstance movementSpeed = livingEntity.getAttribute(Attribute.MOVEMENT_SPEED);
+
+                if (movementSpeed != null) {
+                    movementSpeed.setBaseValue(cosmeticType.getMovementSpeed());
                 }
             }
             nmsEntity = plugin.getNMSManager().entityToNMSEntity(entity);
