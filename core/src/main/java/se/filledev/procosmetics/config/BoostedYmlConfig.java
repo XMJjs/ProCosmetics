@@ -102,6 +102,7 @@ public class BoostedYmlConfig implements Config {
                                 .build(),
                         DumperSettings.DEFAULT,
                         UpdaterSettings.builder()
+                                .setKeepAll(true)
                                 .setVersioning(new BasicVersioning("config_version"))
                                 .build()
                 );
