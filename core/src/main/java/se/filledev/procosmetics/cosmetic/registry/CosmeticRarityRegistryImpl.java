@@ -53,7 +53,7 @@ public class CosmeticRarityRegistryImpl implements CosmeticRarityRegistry {
 
         for (String key : config.getSectionKeys("rarities")) {
             String path = "rarities." + key + ".";
-            boolean enabled = config.getBoolean(path + ".enabled");
+            boolean enabled = config.getBoolean(path + "enabled");
 
             if (!enabled) {
                 continue;
