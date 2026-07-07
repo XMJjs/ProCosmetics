@@ -47,7 +47,7 @@ public class LanguageManagerImpl implements LanguageManager {
 
     private final ProCosmetics plugin;
     private final Map<String, Language> languages = new HashMap<>();
-    public String defaultLocale = "en_us";
+    public String defaultLocale = DEFAULT_LOCALE;
 
     public LanguageManagerImpl(ProCosmetics plugin) {
         this.plugin = plugin;
@@ -66,7 +66,7 @@ public class LanguageManagerImpl implements LanguageManager {
                 String code = languageObject.get("code").getAsString();
                 String name = languageObject.get("name").getAsString();
 
-                languages.putIfAbsent(code, new LanguageImpl(code, name));
+                languages.putIfAbsent(code.toLowerCase(), new LanguageImpl(code, name));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -285,7 +285,7 @@ public class LanguageManagerImpl implements LanguageManager {
 
     @Nullable
     public Language getLanguage(String code) {
-        return languages.get(code);
+        return languages.get(code.toLowerCase());
     }
 
     @Override
