@@ -104,7 +104,7 @@ subprojects {
             endWithNewline()
             //removeUnusedImports()
             //palantirJavaFormat("2.81.0").style("GOOGLE").formatJavadoc(true)
-            licenseHeaderFile(rootProject.file("/config/spotless/license-header.txt"), "package ")
+            licenseHeaderFile(rootProject.file("config/spotless/license-header.txt"), "package ")
                 .updateYearWithLatest(true)
         }
     }
