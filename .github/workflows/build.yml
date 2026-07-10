@@ -1,0 +1,123 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ──────────────────────────────────────────────────────────────
+      #  Java 21 — required by Spigot BuildTools to compile the
+      #  server jars that are not available in any public Maven repo.
+      # ──────────────────────────────────────────────────────────────
+      - name: Set up Java 21 (BuildTools)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # ──────────────────────────────────────────────────────────────
+      #  Cache the Spigot artifacts that BuildTools installs into the
+      #  local Maven repository (~/.m2).  Building Spigot from source
+      #  takes 10+ minutes per version, so we skip it when the cache
+      #  is hit.
+      # ──────────────────────────────────────────────────────────────
+      - name: Cache Spigot dependencies
+        id: cache-spigot
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/spigotmc
+          key: spigot-26.1.2-26.2-remapped
+
+      # ──────────────────────────────────────────────────────────────
+      #  Build Spigot 26.2 and 26.1.2 with BuildTools.
+      #
+      #  • 26.2   — needed by api, core, v26_2
+      #  • 26.1.2 — needed by v26_1
+      #
+      #  The --remapped flag produces the full Spigot jar (not just
+      #  the API), which core requires via compileOnly.
+      # ──────────────────────────────────────────────────────────────
+      - name: Build Spigot dependencies
+        if: steps.cache-spigot.outputs.cache-hit != 'true'
+        run: |
+          curl -o BuildTools.jar \
+            https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
+
+          echo "::group::Building Spigot 26.2"
+          java -jar BuildTools.jar --rev 26.2 --remapped
+          echo "::endgroup::"
+
+          echo "::group::Building Spigot 26.1.2"
+          java -jar BuildTools.jar --rev 26.1.2 --remapped
+          echo "::endgroup::"
+
+      # ──────────────────────────────────────────────────────────────
+      #  Java 25 — the project toolchain targets Java 25 (see
+      #  build.gradle.kts and */gradle.properties).  This JDK runs
+      #  Gradle and the compilation via toolchain auto-provisioning.
+      # ──────────────────────────────────────────────────────────────
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
+
+      # ──────────────────────────────────────────────────────────────
+      #  Upload the shadow-jar artifacts for download from the
+      #  Actions summary page (even when no release is created).
+      # ──────────────────────────────────────────────────────────────
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProCosmetics-build-${{ github.run_number }}
+          path: '**/build/libs/*.jar'
+          if-no-files-found: error
+
+      # ──────────────────────────────────────────────────────────────
+      #  Determine the release tag:
+      #    1. UPSTREAM_TAG file   (highest priority)
+      #    2. project version     (parsed from build.gradle.kts)
+      #    3. run number          (fallback)
+      # ──────────────────────────────────────────────────────────────
+      - name: Determine release tag
+        id: get_tag
+        run: |
+          if [ -f UPSTREAM_TAG ]; then
+            TAG=$(cat UPSTREAM_TAG)
+            echo "Using upstream tag: ${TAG}"
+          else
+            PROJECT_VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' build.gradle.kts || true)
+            if [ -n "$PROJECT_VERSION" ]; then
+              TAG="v${PROJECT_VERSION}"
+              echo "Using project version: ${TAG}"
+            else
+              TAG="v${{ github.run_number }}"
+              echo "No version found, using run number: ${TAG}"
+            fi
+          fi
+          echo "release_tag=${TAG}" >> $GITHUB_OUTPUT
+
+      # ──────────────────────────────────────────────────────────────
+      #  Create a GitHub Release with the built jars attached.
+      # ──────────────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: "Release ${{ steps.get_tag.outputs.release_tag }}"
+          tag_name: "${{ steps.get_tag.outputs.release_tag }}"
+          files: '**/build/libs/*.jar'
+          generate_release_notes: true
