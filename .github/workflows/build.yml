@@ -12,103 +12,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ──────────────────────────────────────────────────────────────
-      #  Java 25 — required by BOTH:
-      #    • Spigot BuildTools (MC 26.x demands Java 25–26)
-      #    • Gradle build (project toolchain targets Java 25)
-      #
-      #  actions/setup-java@v4 fails to install Java 25 on this
-      #  runner, so we download Temurin JDK 25 directly from the
-      #  Adoptium API and configure JAVA_HOME / PATH manually.
-      # ──────────────────────────────────────────────────────────────
-      - name: Cache JDK 25
-        id: cache-jdk
-        uses: actions/cache@v4
-        with:
-          path: ~/jdk25
-          key: jdk-25-temurin-ga
-
-      - name: Install JDK 25
-        if: steps.cache-jdk.outputs.cache-hit != 'true'
+      # Java 25 — required by BOTH:
+      #   • Spigot BuildTools (MC 26.x demands Java 25-26)
+      #   • Gradle toolchain (project targets Java 25)
+      - name: Set up Java 25
         run: |
           curl -sL "https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse?project=jdk" \
             -o /tmp/jdk25.tar.gz
           mkdir -p ~/jdk25
           tar -xzf /tmp/jdk25.tar.gz -C ~/jdk25 --strip-components=1
-
-      - name: Configure Java 25
-        run: |
           echo "JAVA_HOME=$HOME/jdk25" >> $GITHUB_ENV
           echo "$HOME/jdk25/bin" >> $GITHUB_PATH
-          "$HOME/jdk25/bin/java" -version
 
-      # ──────────────────────────────────────────────────────────────
-      #  Cache the Spigot artifacts that BuildTools installs into the
-      #  local Maven repository (~/.m2).  Building Spigot from source
-      #  takes 10+ minutes per version, so we skip it when the cache
-      #  is hit.
-      # ──────────────────────────────────────────────────────────────
-      - name: Cache Spigot dependencies
-        id: cache-spigot
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository/org/spigotmc
-          key: spigot-26.1.2-26.2-remapped
-
-      # ──────────────────────────────────────────────────────────────
-      #  Build Spigot 26.2 and 26.1.2 with BuildTools.
-      #
-      #  • 26.2   — needed by api, core, v26_2
-      #  • 26.1.2 — needed by v26_1
-      #
-      #  The --remapped flag produces the full Spigot jar (not just
-      #  the API), which core requires via compileOnly.
-      # ──────────────────────────────────────────────────────────────
+      # Build Spigot 26.2 + 26.1.2 from source.
+      # These SNAPSHOT jars are not in any public Maven repository.
       - name: Build Spigot dependencies
-        if: steps.cache-spigot.outputs.cache-hit != 'true'
         run: |
           curl -o BuildTools.jar \
             https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
-
-          echo "::group::Building Spigot 26.2"
           java -jar BuildTools.jar --rev 26.2 --remapped
-          echo "::endgroup::"
-
-          echo "::group::Building Spigot 26.1.2"
           java -jar BuildTools.jar --rev 26.1.2 --remapped
-          echo "::endgroup::"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      # ──────────────────────────────────────────────────────────────
-      #  The api module declares reposilite publishing credentials
-      #  via providers.gradleProperty("reposiliteUsername"/"Token")
-      #  which are eagerly resolved during configuration.  Without
-      #  these values the configuration phase fails, even though we
-      #  are only running 'build' (not 'publish').  Supply dummy
-      #  values so the build can proceed.
-      # ──────────────────────────────────────────────────────────────
       - name: Build with Gradle
         run: ./gradlew clean build -PreposiliteUsername=dummy -PreposiliteToken=dummy
 
-      # ──────────────────────────────────────────────────────────────
-      #  Upload the shadow-jar artifacts for download from the
-      #  Actions summary page (even when no release is created).
-      # ──────────────────────────────────────────────────────────────
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ProCosmetics-build-${{ github.run_number }}
+          name: build-artifact
           path: '**/build/libs/*.jar'
-          if-no-files-found: error
 
-      # ──────────────────────────────────────────────────────────────
-      #  Determine the release tag:
-      #    1. UPSTREAM_TAG file   (highest priority)
-      #    2. project version     (parsed from build.gradle.kts)
-      #    3. run number          (fallback)
-      # ──────────────────────────────────────────────────────────────
       - name: Determine release tag
         id: get_tag
         run: |
@@ -116,25 +49,16 @@ jobs:
             TAG=$(cat UPSTREAM_TAG)
             echo "Using upstream tag: ${TAG}"
           else
-            PROJECT_VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' build.gradle.kts || true)
-            if [ -n "$PROJECT_VERSION" ]; then
-              TAG="v${PROJECT_VERSION}"
-              echo "Using project version: ${TAG}"
-            else
-              TAG="v${{ github.run_number }}"
-              echo "No version found, using run number: ${TAG}"
-            fi
+            TAG="v${{ github.run_number }}"
+            echo "No upstream tag found, using run number: ${TAG}"
           fi
           echo "release_tag=${TAG}" >> $GITHUB_OUTPUT
 
-      # ──────────────────────────────────────────────────────────────
-      #  Create a GitHub Release with the built jars attached.
-      # ──────────────────────────────────────────────────────────────
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           name: "Release ${{ steps.get_tag.outputs.release_tag }}"
           tag_name: "${{ steps.get_tag.outputs.release_tag }}"
           files: '**/build/libs/*.jar'
-          generate_release_notes: true
